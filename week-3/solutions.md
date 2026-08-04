@@ -1,46 +1,130 @@
 # Week 3 Assignment Solutions
 
 **Question 1: BFS Node Inspection Order**
-Answer: S,B,E,J,O,A,F
+
+```
+S,B,E,J,O,A,F
+```
 
 **Question 2: Node with largest heuristic value (Manhattan distance to G)**
-Answer: B,16 (or O,16)
+
+```
+B,16
+```
 
 **Question 3: Best First Search Inspection Order**
-Answer: S,J,I,E,F,K,M
+
+```
+S,J,I,E,F,K,M
+```
 
 **Question 4: Hill Climbing node sequence**
-Answer: S,J,I
+
+```
+S,J,I
+```
 
 **Question 5: Hill Climbing node sequence (Extended)**
-Answer: S,J,I,J,I,J,I
+
+```
+S,J,I,J,I,J,I
+```
 
 **Question 6: Local Optimum Node**
-Answer: I
+
+```
+I
+```
 
 **Question 7: Modified Question Path**
 Answer: S,B,A,C,D,G
 
 **Question 8: Number of Hamiltonian Cycles**
-Answer: 22
+
+```
+Node S: degree 4
+Node A: degree 4
+Node B: degree 3
+Node C: degree 3
+Node D: degree 3
+Node E: degree 5
+Node F: degree 4
+Node G: degree 4
+Node H: degree 3
+Node I: degree 2
+Node J: degree 3
+Node K: degree 3
+Node L: degree 3
+Node M: degree 4
+Node N: degree 4
+Node O: degree 3
+Node P: degree 3
+Number of Hamiltonian cycles found: 22
+```
 
 **Question 9: Nearest Neighbour Heuristic**
-Answer: A. Nearest Neighbour algorithm fails to find a tour
+
+```
+Nearest Neighbour algorithm fails to find a tour
+Path until failure: ['S', 'J', 'I', 'E', 'B', 'A', 'C', 'D', 'G', 'M', 'K', 'F']
+```
 
 **Question 10: Greedy Heuristic**
-Answer: A. Greedy algorithm fails to find a tour
+
+```
+Greedy algorithm fails to find a tour
+Edges added: 15
+[('I', 'J'), ('B', 'E'), ('G', 'M'), ('H', 'L'), ('A', 'C'), ('C', 'D'), ('E', 'F'), ('F', 'K'), ('G', 'L'), ('J', 'S'), ('K', 'M'), ('A', 'B'), ('N', 'O'), ('O', 'S'), ('N', 'P')]
+```
 
 **Question 11: SAT Heuristic Values for S, D, E**
-Answer: 2,3,4
+
+```
+S: 2
+A: 4
+B: 3
+C: 4
+D: 3
+E: 4
+```
 
 **Question 12: Beam Search (w=2) Level 2 Nodes**
-Answer: 00101,10001
+
+```
+Sorted neighbors:
+A: 00101 (h=4)
+C: 10001 (h=4)
+E: 10100 (h=4)
+B: 11101 (h=3)
+D: 10111 (h=3)
+Output: 00101,10001
+```
 
 **Question 13: Beam Search (w=2) Level 3 Node Heuristic Values**
-Answer: 5,5
+
+```
+Generated 10 neighbors
+Sorted neighbors:
+00001: h=5
+00001: h=5
+00100: h=5
+00111: h=5
+10000: h=5
+11001: h=5
+01101: h=4
+10011: h=4
+10101: h=2
+10101: h=2
+Top 2: [('00001', 5), ('00001', 5)]
+Output: 5,5
+```
 
 **Question 14: Exact Variable Assignment for SAT formula**
-Answer: 00110
+
+```
+Found 1 solutions:
+00110
+```
 
 **Question 15: Select the correct statements**
 Answer: A, D
