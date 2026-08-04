@@ -1,15 +1,6 @@
-import importlib.util
-import os
 import math
 
-# Load graph from ga3-group1.py
-script_dir = os.path.dirname(os.path.abspath(__file__))
-ga3_path = os.path.join(script_dir, "ga3-group1.py")
-spec = importlib.util.spec_from_file_location("ga3_group1", ga3_path)
-ga3_group1 = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(ga3_group1)
-
-graph = ga3_group1.graph
+from graph_data import graph
 
 def euclidean_distance(loc1, loc2):
     return math.sqrt((loc1[0] - loc2[0])**2 + (loc1[1] - loc2[1])**2)

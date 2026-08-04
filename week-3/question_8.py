@@ -1,14 +1,4 @@
-import importlib.util
-import os
-
-# Load graph from ga3-group1.py
-script_dir = os.path.dirname(os.path.abspath(__file__))
-ga3_path = os.path.join(script_dir, "ga3-group1.py")
-spec = importlib.util.spec_from_file_location("ga3_group1", ga3_path)
-ga3_group1 = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(ga3_group1)
-
-graph = ga3_group1.graph
+from graph_data import graph
 
 def find_all_hamiltonian_cycles(graph):
     nodes = list(graph.keys())
