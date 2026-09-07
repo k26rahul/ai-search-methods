@@ -10,7 +10,7 @@ from InquirerPy import inquirer
 
 def discover_roll_numbers(base_dir: Path) -> list[str]:
     """Find student roll number directories in the assignment folder."""
-    excluded = {"validator-tc", "__pycache__", ".git", ".agents", ".vscode"}
+    excluded = {"validator-tc", "__pycache__", ".git", ".agents", ".vscode", "archive"}
     candidates = []
 
     for item in base_dir.iterdir():

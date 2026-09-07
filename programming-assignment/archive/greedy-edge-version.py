@@ -1,6 +1,8 @@
 # ======================================================================
-# SHIP VERSION: nearest-neighbor construction + neighbor-list restricted
-# 2-opt + double-bridge iterated local search. No Or-opt.
+# GREEDY-EDGE VERSION: greedy edge-matching construction + neighbor-list
+# restricted 2-opt + double-bridge iterated local search.
+# Same local search/perturbation machinery as the ship version, but the
+# initial tour is built differently, so you can A/B the two.
 # ======================================================================
 
 import sys
@@ -11,25 +13,15 @@ import random
 # CONFIGURATION CONSTANTS
 # ----------------------------------------------------------------------
 
-# Total wall-clock budget for the whole program, matches assignment spec.
 TIME_LIMIT_SECONDS = 300
-
-# Seconds before TIME_LIMIT we stop searching, leaving room for the
-# final print + process exit to complete safely.
 SAFETY_MARGIN_SECONDS = 5
 
-# Which city index nearest-neighbor construction starts from.
-# Any value in [0, N-1] is valid.
-START_CITY = 0
-
-# Size of each city's candidate neighbor list, used to restrict which
-# edges 2-opt considers swapping.
-# Smaller (5-8)  -> faster sweeps, more iterations, may miss some moves.
-# Larger (15-25) -> slower sweeps, closer to exhaustive-search quality.
+# Size of each city's candidate neighbor list, used both to restrict
+# 2-opt's move search AND to limit which edges greedy construction
+# considers (full N^2 edge sort is wasteful; we only look at each
+# city's k nearest candidates as possible tour edges).
 K_NEAREST_NEIGHBORS = 12
 
-# Fix the random seed for reproducible runs during testing/debugging.
-# Set to None for a different random perturbation sequence each run.
 RANDOM_SEED = None
 
 
@@ -103,26 +95,129 @@ def build_neighbor_lists(n, dist, k):
 
 
 # ----------------------------------------------------------------------
-# CONSTRUCTION
+# CONSTRUCTION: GREEDY EDGE MATCHING
 # ----------------------------------------------------------------------
+#
+# Idea: repeatedly pick the globally cheapest candidate edge (u, v) and
+# add it to the tour, as long as it doesn't give any city more than 2
+# tour-edges and doesn't close a cycle early (before all N cities are
+# included). Keep going until every city has exactly 2 edges, which
+# forms one single tour. Uses union-find to detect "would this edge
+# close a premature cycle" in near O(1).
 
 
-def nearest_neighbor_tour(n, dist, start=0):
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))
+
+    def find(self, x):
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+        return x
+
+    def union(self, x, y):
+        rx, ry = self.find(x), self.find(y)
+        if rx != ry:
+            self.parent[rx] = ry
+
+
+def greedy_edge_tour(n, dist, neighbor_lists):
+    # Candidate edges: each city's k nearest neighbors, deduplicated.
+    candidate_edges = set()
+    for u in range(n):
+        for v in neighbor_lists[u]:
+            edge = (u, v) if u < v else (v, u)
+            candidate_edges.add(edge)
+
+    sorted_edges = sorted(candidate_edges, key=lambda e: dist[e[0]][e[1]])
+
+    degree = [0] * n
+    adjacency = [[] for _ in range(n)]
+    uf = UnionFind(n)
+    edges_used = 0
+
+    for u, v in sorted_edges:
+        if edges_used == n:
+            break
+        if degree[u] >= 2 or degree[v] >= 2:
+            continue
+        if uf.find(u) == uf.find(v):
+            continue  # would close a premature cycle
+
+        adjacency[u].append(v)
+        adjacency[v].append(u)
+        degree[u] += 1
+        degree[v] += 1
+        uf.union(u, v)
+        edges_used += 1
+
+    # The candidate-edge set (k nearest neighbors only) usually isn't
+    # enough to connect every city into one single path with exactly
+    # two endpoints left. Patch remaining endpoints (degree < 2) together
+    # greedily by brute-force nearest available match.
+    endpoints = [c for c in range(n) if degree[c] < 2]
+
+    while len(endpoints) > 2:
+        u = endpoints[0]
+        best_v = None
+        best_dist = float("inf")
+        for v in endpoints[1:]:
+            if v == u or uf.find(u) == uf.find(v):
+                continue
+            if dist[u][v] < best_dist:
+                best_dist = dist[u][v]
+                best_v = v
+
+        if best_v is None:
+            # all remaining endpoints are in the same component except
+            # ones that would close the tour early; just connect to the
+            # nearest different-component endpoint we can find
+            for v in endpoints[1:]:
+                if uf.find(u) != uf.find(v):
+                    best_v = v
+                    break
+
+        adjacency[u].append(best_v)
+        adjacency[best_v].append(u)
+        degree[u] += 1
+        degree[best_v] += 1
+        uf.union(u, best_v)
+
+        endpoints = [c for c in range(n) if degree[c] < 2]
+
+    # Exactly two endpoints (degree 1) should remain: close the tour.
+    if len(endpoints) == 2:
+        u, v = endpoints
+        adjacency[u].append(v)
+        adjacency[v].append(u)
+        degree[u] += 1
+        degree[v] += 1
+
+    # Walk the adjacency structure to produce the tour as a city order.
+    tour = [0]
     visited = [False] * n
-    tour = [start]
-    visited[start] = True
-    current = start
+    visited[0] = True
+    current = 0
+    prev = -1
 
     for _ in range(n - 1):
-        nearest_city = -1
-        nearest_dist = float("inf")
-        for city in range(n):
-            if not visited[city] and dist[current][city] < nearest_dist:
-                nearest_dist = dist[current][city]
-                nearest_city = city
-        tour.append(nearest_city)
-        visited[nearest_city] = True
-        current = nearest_city
+        next_city = None
+        for c in adjacency[current]:
+            if c != prev and not visited[c]:
+                next_city = c
+                break
+        if next_city is None:
+            # fallback: pick any unvisited city (shouldn't normally trigger)
+            for c in range(n):
+                if not visited[c]:
+                    next_city = c
+                    break
+
+        tour.append(next_city)
+        visited[next_city] = True
+        prev = current
+        current = next_city
 
     return tour
 
@@ -176,7 +271,7 @@ def local_search(tour, dist, neighbor_lists, deadline):
 
 
 # ----------------------------------------------------------------------
-# PERTURBATION: double bridge (4-opt move, escapes 2-opt local optima)
+# PERTURBATION: double bridge
 # ----------------------------------------------------------------------
 
 
@@ -222,7 +317,7 @@ def main():
 
     neighbor_lists = build_neighbor_lists(n, dist, K_NEAREST_NEIGHBORS)
 
-    tour = nearest_neighbor_tour(n, dist, start=START_CITY)
+    tour = greedy_edge_tour(n, dist, neighbor_lists)
     print_tour(tour)
 
     tour = local_search(tour, dist, neighbor_lists, deadline)
