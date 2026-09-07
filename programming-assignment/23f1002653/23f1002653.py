@@ -1,7 +1,10 @@
-# ======================================================================
-# SHIP VERSION: nearest-neighbor construction + neighbor-list restricted
-# 2-opt + double-bridge iterated local search. No Or-opt.
-# ======================================================================
+# Traveling Salesperson Problem (TSP) solver using Iterated Local Search (ILS).
+# Approach:
+# - Construction: builds an initial tour using the nearest neighbor heuristic.
+# - Candidate lists: precomputes k-nearest neighbors for each city to restrict edge evaluation.
+# - Local search: applies neighbor-list restricted 2-opt moves using position lookups for fast updates.
+# - Perturbation: uses 4-opt double-bridge moves to escape local optima while preserving edge segments.
+# - Search loop: iterates perturbation and local search within the time limit, printing improved tours immediately.
 
 import sys
 import time
