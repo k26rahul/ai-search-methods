@@ -266,9 +266,9 @@ def run_solution(
 
     total_time = time.time() - start_time
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 10)
     print("EVALUATION SUMMARY")
-    print("=" * 60)
+    print("=" * 10)
     print(f"Elapsed Time:     {total_time:.2f}s (Limit: {timeout}s)")
 
     if interrupted:
@@ -291,7 +291,7 @@ def run_solution(
         print("Result:           PASS")
     else:
         print("Result:           FAIL (No valid tour produced)")
-    print("=" * 60 + "\n")
+    print("=" * 10 + "\n")
 
     return {
         "script": script_path.name,
